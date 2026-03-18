@@ -61,19 +61,20 @@ COPY --chown=flink:flink --from=build /app/tools/license/licenses-output/license
 COPY --chown=flink:flink --from=build /app/LICENSE ./LICENSE
 COPY --chown=flink:flink docker-entrypoint.sh /
 
-ARG SKIP_OS_UPDATE=true
-
-# Updating Debian
-RUN if [ "$SKIP_OS_UPDATE" = "false" ]; then apt-get update; fi
-RUN if [ "$SKIP_OS_UPDATE" = "false" ]; then apt-get upgrade -y; fi
-
 ARG DISABLE_JEMALLOC=false
-# Install jemalloc
-RUN if [ "$DISABLE_JEMALLOC" = "false" ]; then \
-  apt-get update; \
-  apt-get -y install libjemalloc-dev; \
-  rm -rf /var/lib/apt/lists/*; \
-  fi
+# Fix CVEs: CVE-2021-46848, CVE-2025-6965, CVE-2025-15467, CVE-2024-3596
+RUN apt-get update && \
+    apt-get install -y --only-upgrade \
+      libtasn1-6 \
+      libsqlite3-0 \
+      libssl3 \
+      openssl \
+      libgssapi-krb5-2 \
+      libk5crypto3 \
+      libkrb5-3 \
+      libkrb5support0 && \
+    if [ "$DISABLE_JEMALLOC" = "false" ]; then apt-get -y install libjemalloc-dev; fi && \
+    rm -rf /var/lib/apt/lists/*
 
 USER flink
 ENTRYPOINT ["/docker-entrypoint.sh"]
