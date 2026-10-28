@@ -32,6 +32,22 @@ The official operator images are also available on [Dockerhub](https://hub.docke
 
 Please check out our docs to read about the [upgrade process](https://nightlies.apache.org/flink/flink-kubernetes-operator-docs-main/docs/operations/upgrade/) and our [backward compatibility guarantees](https://nightlies.apache.org/flink/flink-kubernetes-operator-docs-main/docs/operations/compatibility/).
 
+### Goldsky production TLS trust mitigation (INFRA-7841)
+
+`Dockerfile.emudhra` builds a trust-store-only overlay on the deployed Goldsky
+1.10 image digest. It keeps the existing Temurin 11/Jammy runtime and operator
+binaries, removing only emSign ECC Root CA - G3 from JVM `cacerts`. AAA
+Certificate Services is already absent; unrelated emSign G1, C1 and C3 remain.
+The Fabric8 service-account CA augments, rather than replaces, JVM public roots.
+
+Build with `docker build --platform linux/arm64 -f Dockerfile.emudhra -t flink-operator:infra-7841-emudhra .`.
+This is an interim mitigation while fixed Temurin 11 releases are pending, not
+an operator upgrade. Before publishing, rebuild and probe every architecture to
+be deployed. The platform owner must update the production image reference and
+restart the operator and webhook containers through the normal controlled
+rollout; rebuilding alone does not change running pods.
+
+
 ## Support
 
 Don’t hesitate to ask!

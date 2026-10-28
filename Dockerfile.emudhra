@@ -1,0 +1,21 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements. See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership. The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License. You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+FROM 301417190815.dkr.ecr.us-west-2.amazonaws.com/flink-kubernetes-operator@sha256:1a5428ffdf2bc8561949da9e598ed567b6ea1fd7a605fe0f3251963b8c650881
+USER root
+# Remove the compromised test-chain anchor; AAA is already absent in this exact image.
+RUN keytool -delete -cacerts -storepass changeit -alias 'cn=emsign_ecc_root_ca_-_g3,o=emudhra_technologies_limited,ou=emsign_pki,c=in'
+USER flink
