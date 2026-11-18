@@ -296,6 +296,18 @@ function start_minikube {
         echo "Could not start minikube. Aborting..."
         exit 1
     fi
+    if ! retry_times 3 30 enable_minikube_ingress; then
+        echo "Could not enable minikube ingress addon. Aborting..."
+        exit 1
+    fi
+}
+
+function enable_minikube_ingress {
+    # `minikube addons enable ingress` performs its own synchronous verify with
+    # an internal ~3m deadline that is frequently exceeded on cold CI runners
+    # while pulling the ingress-nginx controller and webhook-certgen images.
+    # The addon Deployment is applied even when verify times out, so retrying
+    # is cheap and idempotent: the second attempt reuses the cached images.
     minikube addons enable ingress
 }
 
@@ -304,7 +316,8 @@ function start_minikube_if_not_running {
         echo "Starting minikube ..."
         # Please update tbe docs when changing kubernetes version
         minikube start \
-        --kubernetes-version=v1.25.3 \
+        --kubernetes-version=v1.28.0 \
+        --container-runtime=docker \
         --extra-config=kubelet.image-gc-high-threshold=99 \
         --extra-config=kubelet.image-gc-low-threshold=98 \
         --extra-config=kubelet.minimum-container-ttl-duration=120m \
