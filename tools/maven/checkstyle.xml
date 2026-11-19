@@ -275,17 +275,14 @@ This file is based on the checkstyle file of Apache Beam.
 
 		<!-- Checks for Javadoc comments.                     -->
 		<!-- See http://checkstyle.sf.net/config_javadoc.html -->
+		<!-- JavadocMethod validates the content of existing Javadoc (e.g. @param/@return tags).
+		     Note: JavadocMethod's 'scope' property was renamed to 'accessModifiers' in checkstyle 8.42
+		     (JavadocType still uses 'scope').
+		     Javadoc is not required to be present (allowMissingJavadoc was removed in checkstyle 8.24;
+		     MissingJavadocMethod is intentionally omitted to preserve the original permissive behavior). -->
 		<module name="JavadocMethod">
-			<property name="scope" value="protected"/>
+			<property name="accessModifiers" value="protected"/>
 			<property name="severity" value="error"/>
-			<property name="allowMissingJavadoc" value="true"/>
-			<property name="allowMissingParamTags" value="true"/>
-			<property name="allowMissingReturnTag" value="true"/>
-			<property name="allowMissingThrowsTags" value="true"/>
-			<property name="allowThrowsTagsForSubclasses" value="true"/>
-			<property name="allowUndeclaredRTE" value="true"/>
-			<!-- This check sometimes failed for with "Unable to get class information for @throws tag" for custom exceptions -->
-			<property name="suppressLoadErrors" value="true"/>
 		</module>
 
 		<!-- Check that paragraph tags are used correctly in Javadoc. -->
@@ -294,7 +291,6 @@ This file is based on the checkstyle file of Apache Beam.
 		<module name="JavadocType">
 			<property name="scope" value="protected"/>
 			<property name="severity" value="error"/>
-			<property name="allowMissingParamTags" value="true"/>
 		</module>
 
 		<module name="JavadocStyle">
