@@ -16,6 +16,17 @@
 
 FROM 301417190815.dkr.ecr.us-west-2.amazonaws.com/flink-kubernetes-operator@sha256:1a5428ffdf2bc8561949da9e598ed567b6ea1fd7a605fe0f3251963b8c650881
 USER root
-# Remove the compromised test-chain anchor; AAA is already absent in this exact image.
-RUN keytool -delete -cacerts -storepass changeit -alias 'cn=emsign_ecc_root_ca_-_g3,o=emudhra_technologies_limited,ou=emsign_pki,c=in'
+# Jammy's fixed CA package removes G3 and AAA from the OS store.
+RUN set -eux; \
+    keytool -delete -cacerts -storepass changeit -alias 'cn=emsign_ecc_root_ca_-_g3,o=emudhra_technologies_limited,ou=emsign_pki,c=in'; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --only-upgrade ca-certificates=20260816ubuntu0.22.04.2; \
+    test "$(dpkg-query -W -f='${Version}' ca-certificates)" = 20260816ubuntu0.22.04.2; \
+    test ! -e /usr/share/ca-certificates/mozilla/Comodo_AAA_Services_root.crt; \
+    test ! -e /usr/share/ca-certificates/mozilla/emSign_ECC_Root_CA_-_G3.crt; \
+    openssl crl2pkcs7 -nocrl -certfile /etc/ssl/certs/ca-certificates.crt \
+        | openssl pkcs7 -print_certs -noout > /tmp/os-ca-list; \
+    keytool -list -v -cacerts -storepass changeit > /tmp/java-ca-list; \
+    if grep -iE '(CN[[:space:]]*=[[:space:]]*AAA Certificate Services|CN[[:space:]]*=[[:space:]]*emSign ECC Root CA - G3)' /tmp/os-ca-list /tmp/java-ca-list; then exit 1; fi; \
+    rm -rf /var/lib/apt/lists/* /tmp/os-ca-list /tmp/java-ca-list
 USER flink
